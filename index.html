@@ -213,6 +213,16 @@
       if (!paused) updateGame();
     }
 
+    // Device tilt control for Android browsers
+    if (window.DeviceOrientationEvent) {
+      window.addEventListener("deviceorientation", function(event) {
+        if (!gameRunning || paused) return;
+        const tiltLR = event.gamma;
+        if (tiltLR < -5) moveLeft();
+        else if (tiltLR > 5) moveRight();
+      }, true);
+    }
+
     setInterval(() => {
       if (gameRunning && !paused) createCoin();
     }, 700);
