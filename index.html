@@ -38,14 +38,20 @@
       justify-content: center;
       gap: 20px;
     }
-    #touchControls button {
+    #touchControls button, #pauseButton {
       padding: 10px 30px;
       font-size: 18px;
       border-radius: 10px;
       border: none;
-      background: #333;
+      background: #555;
       color: white;
       cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+    #pauseButton {
+      position: fixed;
+      top: 10px;
+      right: 10px;
     }
   </style>
 </head>
@@ -58,6 +64,8 @@
   </div>
   <canvas id="gameCanvas" width="400" height="600"></canvas>
 
+  <button id="pauseButton" onclick="togglePause()">⏸️</button>
+
   <div id="touchControls">
     <button onclick="moveLeft()">⬅️</button>
     <button onclick="moveRight()">➡️</button>
@@ -65,6 +73,7 @@
 
   <audio id="coinSound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_416615b36a.mp3?filename=coin-collect-1-193574.mp3"></audio>
   <audio id="bombSound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_97505ef8e7.mp3?filename=explosion-6055.mp3"></audio>
+  <audio id="bgMusic" src="https://cdn.pixabay.com/download/audio/2022/06/15/audio_2eeb62421d.mp3?filename=arcade-loop-112113.mp3" loop></audio>
 
   <script>
     const canvas = document.getElementById('gameCanvas');
@@ -74,19 +83,13 @@
     const finalScore = document.getElementById('finalScore');
     const coinSound = document.getElementById('coinSound');
     const bombSound = document.getElementById('bombSound');
+    const bgMusic = document.getElementById('bgMusic');
 
-    let basket = {
-      x: 170,
-      y: 550,
-      width: 60,
-      height: 20,
-      speed: 6
-    };
-
-    let coins = [];
-    let bombs = [];
+    let basket = { x: 170, y: 550, width: 60, height: 20, speed: 6 };
+    let coins = [], bombs = [];
     let score = 0;
     let gameRunning = true;
+    let paused = false;
 
     function createCoin() {
       coins.push({
@@ -130,8 +133,7 @@
     }
 
     function updateGame() {
-      if (!gameRunning) return;
-
+      if (!gameRunning || paused) return;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       drawBasket();
       drawCoins();
@@ -192,23 +194,31 @@
       score = 0;
       basket.x = 170;
       gameRunning = true;
+      paused = false;
       scoreBoard.textContent = 'Score: 0';
       gameOverScreen.style.display = 'none';
+      bgMusic.play();
       updateGame();
     }
 
     function endGame() {
       gameRunning = false;
+      bgMusic.pause();
       finalScore.textContent = 'Your Score: ' + score;
       gameOverScreen.style.display = 'block';
     }
 
+    function togglePause() {
+      paused = !paused;
+      if (!paused) updateGame();
+    }
+
     setInterval(() => {
-      if (gameRunning) createCoin();
+      if (gameRunning && !paused) createCoin();
     }, 700);
 
     setInterval(() => {
-      if (gameRunning && Math.random() < 0.5) createBomb();
+      if (gameRunning && !paused && Math.random() < 0.5) createBomb();
     }, 1300);
 
     document.addEventListener('keydown', moveBasket);
